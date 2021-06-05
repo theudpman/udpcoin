@@ -12,11 +12,12 @@ namespace System {
 
 	class UdpConnector {
 		public:
-			UdpConnector(uint32_t ipAddress);
+			UdpConnector(uint32_t ipAddress, int udpPort);
 			int sendUdpPacket(const uint8_t* ptr, size_t size);
 
 		private:
 			uint32_t ipAddress;
+			int udpPort;
 	};
 
 }

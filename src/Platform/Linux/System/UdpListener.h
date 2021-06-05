@@ -7,10 +7,19 @@
 #include <cstdint>
 #include <string>
 
+#include "System/UdpPacket.h"
+
+#define		MAX_SAFE_UDP_DATA_SIZE			508
+#define		IP_HEADER_SIZE					60
+#define		UDP_HEADER_SIZE					8
+
+#define 	MAX_SAFE_UDP_PACKET_SIZE		(MAX_SAFE_UDP_DATA_SIZE + IP_HEADER_SIZE + UDP_HEADER_SIZE)
+
 namespace System {
 
 class Dispatcher;
 class Ipv4Address;
+class UdpPacket;
 
 class UdpListener {
 public:
@@ -21,6 +30,8 @@ public:
   ~UdpListener();
   UdpListener& operator=(const UdpListener&) = delete;
   UdpListener& operator=(UdpListener&& other);
+  UdpPacket receiveUdpPacket();
+  void closeSocket();
 
 private:
   Dispatcher* dispatcher;

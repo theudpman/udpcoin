@@ -66,6 +66,29 @@ void ContextGroup::spawn(std::function<void()>&& procedure) {
   dispatcher->pushContext(&context);
 }
 
+void ContextGroup::spawn(std::function<void()>&& procedure, std::function<void()>&& interruptProcedure) {
+  assert(dispatcher != nullptr);
+  NativeContext& context = dispatcher->getReusableContext();
+  if (contextGroup.firstContext != nullptr) {
+	context.groupPrev = contextGroup.lastContext;
+	assert(contextGroup.lastContext->groupNext == nullptr);
+	contextGroup.lastContext->groupNext = &context;
+  } else {
+	context.groupPrev = nullptr;
+	contextGroup.firstContext = &context;
+	contextGroup.firstWaiter = nullptr;
+  }
+
+  context.interrupted = false;
+  context.interruptProcedure = std::move(procedure);
+  context.group = &contextGroup;
+  context.groupNext = nullptr;
+  context.procedure = std::move(procedure);
+  contextGroup.lastContext = &context;
+  dispatcher->pushContext(&context);
+}
+
+
 void ContextGroup::wait() {
   if (contextGroup.firstContext != nullptr) {
     NativeContext* context = dispatcher->getCurrentContext();

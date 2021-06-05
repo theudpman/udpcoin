@@ -33,6 +33,7 @@ class LevinProtocol {
 public:
 
   LevinProtocol(System::TcpConnection& connection);
+  LevinProtocol(System::TcpConnection& connection, std::string udpPort);
 
   template <typename Request, typename Response>
   bool invoke(uint32_t command, const Request& request, Response& response) {
@@ -96,6 +97,7 @@ private:
   bool readStrict(uint8_t* ptr, size_t size);
   void writeStrict(const uint8_t* ptr, size_t size);
   System::TcpConnection& m_conn;
+  int udpPort;
 };
 
 }

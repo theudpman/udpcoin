@@ -38,7 +38,14 @@ bool LevinProtocol::Command::needReply() const {
 }
 
 LevinProtocol::LevinProtocol(System::TcpConnection& connection) 
-  : m_conn(connection) {}
+  : m_conn(connection) {
+	this->udpPort = -1;
+}
+
+LevinProtocol::LevinProtocol(System::TcpConnection& connection, std::string udpPort)
+  : m_conn(connection) {
+	this->udpPort = std::stoi(udpPort);
+}
 
 void LevinProtocol::sendUdpMessage(uint32_t command, const BinaryArray& out) {
 	bucket_head2 head = { 0 };
@@ -59,7 +66,7 @@ void LevinProtocol::sendUdpMessage(uint32_t command, const BinaryArray& out) {
 
 	auto ipAddressAndPort = m_conn.getPeerAddressAndPort();
 	System::Ipv4Address ipAddress = ipAddressAndPort.first;
-	System::UdpConnector udp_conn(ipAddress.getValue());
+	System::UdpConnector udp_conn(ipAddress.getValue(), udpPort);
 	udp_conn.sendUdpPacket(writeBuffer.data(), writeBuffer.size());
 }
 

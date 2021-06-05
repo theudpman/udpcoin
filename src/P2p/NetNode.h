@@ -16,6 +16,7 @@
 #include <System/Timer.h>
 #include <System/TcpConnection.h>
 #include <System/TcpListener.h>
+#include <System/UdpListener.h>
 
 #include "CryptoNoteCore/OnceInInterval.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
@@ -32,6 +33,7 @@
 
 namespace System {
 class TcpConnection;
+class UdpListener;
 }
 
 namespace CryptoNote
@@ -199,6 +201,8 @@ namespace CryptoNote
     ConnectionContainer m_connections;
 
     void acceptLoop();
+    void receiveUdpTransactions();
+    void shutdownUdp();
     void connectionHandler(const boost::uuids::uuid& connectionId, P2pConnectionContext& connection);
     void writeHandler(P2pConnectionContext& ctx);
     void onIdle();

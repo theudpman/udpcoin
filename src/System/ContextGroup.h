@@ -18,6 +18,7 @@ public:
   ContextGroup& operator=(ContextGroup&& other);
   void interrupt();
   void spawn(std::function<void()>&& procedure);
+  void spawn(std::function<void()>&& procedure, std::function<void()>&& interruptProcedure);
   void wait();
 
 private:
