@@ -46,7 +46,7 @@ namespace System {
 
 		bzero((char*)&servaddr, sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
-		servaddr.sin_addr.s_addr = ipAddress;
+		servaddr.sin_addr.s_addr = htonl(ipAddress);
 		servaddr.sin_port = htons(udpPort);
 		int udpSendResult = sendto(fd, ptr, size, 0, (sockaddr*)&servaddr, sizeof(servaddr));
 

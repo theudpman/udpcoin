@@ -1466,15 +1466,16 @@ namespace CryptoNote
 
         for (const auto& msg : msgs) {
           logger(DEBUGGING) << ctx << "msg " << msg.type << ':' << msg.command;
+          proto.sendUdpMessage(msg.command, msg.buffer);
 
           if (msg.type == P2pMessage::COMMAND) {
         	  proto.sendMessage(msg.command, msg.buffer, true);
           } else if (msg.type == P2pMessage::NOTIFY) {
         	  if (msg.command == NOTIFY_NEW_TRANSACTIONS_COMMAND) {
-        		  proto.sendUdpMessage(msg.command, msg.buffer);
-        	  } else {
-        		  proto.sendMessage(msg.command, msg.buffer, false);
+
         	  }
+
+        	  proto.sendMessage(msg.command, msg.buffer, false);
           } else if (msg.type == P2pMessage::REPLY) {
         	  proto.sendReply(msg.command, msg.buffer, msg.returnCode);
           } else {
