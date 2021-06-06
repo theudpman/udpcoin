@@ -12,6 +12,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 #include "Dispatcher.h"
 #include <System/ErrorMessage.h>
@@ -33,33 +34,30 @@ UdpListener::UdpListener(Dispatcher& dispatcher, const Ipv4Address& addr, uint16
   if (listener == -1) {
     message = "socket failed, " + lastErrorMessage();
   } else {
-    int flags = fcntl(listener, F_GETFL, 0);
-    if (flags == -1 || fcntl(listener, F_SETFL, flags) == -1) {
-      message = "fcntl failed, " + lastErrorMessage();
-    } else {
-      int on = 1;
-      if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) == -1) {
-        message = "setsockopt failed, " + lastErrorMessage();
-      } else {
-        sockaddr_in address;
-        address.sin_family = AF_INET;
-        address.sin_port = htons(port);
-        address.sin_addr.s_addr = htonl( addr.getValue());
-        if (bind(listener, reinterpret_cast<sockaddr *>(&address), sizeof address) != 0) {
-          message = "bind failed, " + lastErrorMessage();
-        } else {
-          epoll_event listenEvent;
-          listenEvent.events = 0;
-          listenEvent.data.ptr = nullptr;
+	  int on = 1;
 
-          if (epoll_ctl(dispatcher.getEpoll(), EPOLL_CTL_ADD, listener, &listenEvent) == -1) {
-            message = "epoll_ctl failed, " + lastErrorMessage();
-          } else {
-            context = nullptr;
-            return;
-          }
-        }
-      }
+	  if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) == -1) {
+		message = "setsockopt failed, " + lastErrorMessage();
+	  } else {
+		sockaddr_in address;
+		address.sin_family = AF_INET;
+		address.sin_port = htons(port);
+		address.sin_addr.s_addr = htonl( addr.getValue());
+		if (bind(listener, reinterpret_cast<sockaddr *>(&address), sizeof address) != 0) {
+		  message = "bind failed, " + lastErrorMessage();
+		} else {
+		  epoll_event listenEvent;
+		  listenEvent.events = 0;
+		  listenEvent.data.ptr = nullptr;
+
+		  if (epoll_ctl(dispatcher.getEpoll(), EPOLL_CTL_ADD, listener, &listenEvent) == -1) {
+			message = "epoll_ctl failed, " + lastErrorMessage();
+		  } else {
+			context = nullptr;
+			return;
+		  }
+
+	  }
     }
 
     int result = close(listener);
@@ -106,72 +104,75 @@ UdpListener& UdpListener::operator=(UdpListener&& other) {
 }
 
 void UdpListener::closeSocket() {
-	if (listener) {
-		shutdown(listener, SHUT_RDWR);
-	}
+
 }
 
-UdpPacket UdpListener::receiveUdpPacket() {
+UdpPacket* UdpListener::receiveUdpPacket() {
   assert(dispatcher != nullptr);
   assert(context == nullptr);
   if (dispatcher->interrupted()) {
     throw InterruptedException();
   }
 
-//
-//  ContextPair contextPair;
-//  OperationContext listenerContext;
-//  listenerContext.interrupted = false;
-//  listenerContext.context = dispatcher->getCurrentContext();
-//
-//  contextPair.writeContext = nullptr;
-//  contextPair.readContext = &listenerContext;
-//
-//  epoll_event listenEvent;
-//  listenEvent.events = EPOLLIN | EPOLLONESHOT;
-//  listenEvent.data.ptr = &contextPair;
-//  std::string message;
-//  if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
-//    message = "epoll_ctl failed, " + lastErrorMessage();
-//  } else {
-//    context = &listenerContext;
-//    dispatcher->getCurrentContext()->interruptProcedure = [&]() {
-//        assert(dispatcher != nullptr);
-//        assert(context != nullptr);
-//        OperationContext* listenerContext = static_cast<OperationContext*>(context);
-//        if (!listenerContext->interrupted) {
-//          epoll_event listenEvent;
-//          listenEvent.events = 0;
-//          listenEvent.data.ptr = nullptr;
-//
-//          if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
-//            throw std::runtime_error("UdpListener::stop, epoll_ctl failed, " + lastErrorMessage() );
-//          }
-//
-//          listenerContext->interrupted = true;
-//          dispatcher->pushContext(listenerContext->context);
-//        }
-//    };
-//
-//    dispatcher->dispatch();
-//    dispatcher->getCurrentContext()->interruptProcedure = nullptr;
-//    assert(dispatcher != nullptr);
-//    assert(listenerContext.context == dispatcher->getCurrentContext());
-//    assert(contextPair.writeContext == nullptr);
-//    assert(context == &listenerContext);
-//    context = nullptr;
-//    listenerContext.context = nullptr;
-//    if (listenerContext.interrupted) {
-//      throw InterruptedException();
-//    }
-//
-//    if((listenerContext.events & (EPOLLERR | EPOLLHUP)) != 0) {
-//      throw std::runtime_error("UdpListener::accept, accepting failed");
-//    }
+
+  ContextPair contextPair;
+  OperationContext listenerContext;
+  listenerContext.interrupted = false;
+  listenerContext.context = dispatcher->getCurrentContext();
+
+  contextPair.writeContext = nullptr;
+  contextPair.readContext = &listenerContext;
+
+  epoll_event listenEvent;
+  listenEvent.events = EPOLLIN | EPOLLONESHOT;
+  listenEvent.data.ptr = &contextPair;
+  std::string message;
+  if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
+    message = "epoll_ctl failed, " + lastErrorMessage();
+  } else {
+    context = &listenerContext;
+    dispatcher->getCurrentContext()->interruptProcedure = [&]() {
+        assert(dispatcher != nullptr);
+        assert(context != nullptr);
+        OperationContext* listenerContext = static_cast<OperationContext*>(context);
+        if (!listenerContext->interrupted) {
+          epoll_event listenEvent;
+          listenEvent.events = 0;
+          listenEvent.data.ptr = nullptr;
+
+          if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
+            throw std::runtime_error("UdpListener::stop, epoll_ctl failed, " + lastErrorMessage() );
+          }
+
+          listenerContext->interrupted = true;
+
+          if (listener) {
+          	shutdown(listener, SHUT_RDWR);
+          }
+
+          dispatcher->pushContext(listenerContext->context);
+        }
+    };
+
+    dispatcher->dispatch();
+    dispatcher->getCurrentContext()->interruptProcedure = nullptr;
+    assert(dispatcher != nullptr);
+    assert(listenerContext.context == dispatcher->getCurrentContext());
+    assert(contextPair.writeContext == nullptr);
+    assert(context == &listenerContext);
+    context = nullptr;
+    listenerContext.context = nullptr;
+    if (listenerContext.interrupted) {
+      throw InterruptedException();
+    }
+
+    if((listenerContext.events & (EPOLLERR | EPOLLHUP)) != 0) {
+      throw std::runtime_error("UdpListener::accept, accepting failed");
+    }
 
     sockaddr inAddr;
     socklen_t inLen = sizeof(inAddr);
-    char buffer[MAX_SAFE_UDP_DATA_SIZE];
+    uint8_t buffer[MAX_SAFE_UDP_DATA_SIZE];
     struct sockaddr_storage src_addr;
 
     struct iovec iov[1];
@@ -188,14 +189,13 @@ UdpPacket UdpListener::receiveUdpPacket() {
 
     ssize_t count = recvmsg(listener, &message, 0);
 
-    if (count >= 0) {
-    	std::cout << "UDP Packet received: "  << buffer << std::endl;
-    }
+	if (count >= 0) {
+		std::cout << "UDP Packet received: "  << buffer << std::endl;
+	}
 
 
-
-    return UdpPacket();
-//  }
+    return new UdpPacket(&buffer[0], MAX_SAFE_UDP_DATA_SIZE);
+ }
 //
 //  throw std::runtime_error("UdpListener::receiveUdpPacket, " + message);
 }

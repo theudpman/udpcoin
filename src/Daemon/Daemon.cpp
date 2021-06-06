@@ -21,7 +21,6 @@
 #include "P2p/NetNode.h"
 #include "P2p/NetNodeConfig.h"
 #include "Rpc/RpcServer.h"
-#include "Rpc/UdpServer.h"
 #include "Rpc/RpcServerConfig.h"
 #include "version.h"
 

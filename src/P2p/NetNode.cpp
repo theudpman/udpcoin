@@ -491,8 +491,7 @@ namespace CryptoNote
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::timedSyncLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::timeoutLoop, this));
-    m_workingContextGroup.spawn(std::bind(&NodeServer::receiveUdpTransactions, this),
-    		std::bind(&NodeServer::shutdownUdp, this));
+    m_workingContextGroup.spawn(std::bind(&NodeServer::receiveUdpTransactions, this));
 
     m_stopEvent.wait();
 
@@ -1307,21 +1306,11 @@ namespace CryptoNote
   void NodeServer::receiveUdpTransactions() {
     for (;;) {
       try {
-    	  System::UdpPacket udpPacket = m_transaction_listener.receiveUdpPacket();
-//        P2pConnectionContext ctx(m_dispatcher, logger.getLogger(), m_listener.accept());
-//        ctx.m_connection_id = boost::uuids::random_generator()();
-//        ctx.m_is_income = true;
-//        ctx.m_started = time(nullptr);
-//
-//        auto addressAndPort = ctx.connection.getPeerAddressAndPort();
-//        ctx.m_remote_ip = hostToNetwork(addressAndPort.first.getValue());
-//        ctx.m_remote_port = addressAndPort.second;
-//
-//        auto iter = m_connections.emplace(ctx.m_connection_id, std::move(ctx)).first;
-//        const boost::uuids::uuid& connectionId = iter->first;
-//        P2pConnectionContext& connection = iter->second;
-//
-//        m_workingContextGroup.spawn(std::bind(&NodeServer::connectionHandler, this, std::cref(connectionId), std::ref(connection)));
+    	  System::UdpPacket* udpPacket = m_transaction_listener.receiveUdpPacket();
+
+    	  if (udpPacket) {
+    		  delete udpPacket;
+    	  }
       } catch (System::InterruptedException&) {
         logger(DEBUGGING) << "receiveUdpTransactions() is interrupted";
         break;

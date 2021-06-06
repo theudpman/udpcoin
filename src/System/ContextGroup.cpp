@@ -80,7 +80,7 @@ void ContextGroup::spawn(std::function<void()>&& procedure, std::function<void()
   }
 
   context.interrupted = false;
-  context.interruptProcedure = std::move(procedure);
+  context.interruptProcedure = std::move(interruptProcedure);
   context.group = &contextGroup;
   context.groupNext = nullptr;
   context.procedure = std::move(procedure);

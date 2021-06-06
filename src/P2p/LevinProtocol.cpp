@@ -67,7 +67,7 @@ void LevinProtocol::sendUdpMessage(uint32_t command, const BinaryArray& out) {
 	auto ipAddressAndPort = m_conn.getPeerAddressAndPort();
 	System::Ipv4Address ipAddress = ipAddressAndPort.first;
 	System::UdpConnector udp_conn(ipAddress.getValue(), udpPort);
-	udp_conn.sendUdpPacket(writeBuffer.data(), writeBuffer.size());
+	udp_conn.sendUdpPackets(writeBuffer.data(), writeBuffer.size());
 }
 
 void LevinProtocol::sendMessage(uint32_t command, const BinaryArray& out, bool needResponse) {
