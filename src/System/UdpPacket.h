@@ -22,6 +22,9 @@
 
 #define		CREATE_UDP_SEQUENCE_HEADER(t, s)	((t << 4) | s)
 
+char const hexIndexToChar[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B','C','D','E','F'};
+
+
 namespace System {
 
 class UdpPacket {
@@ -30,16 +33,18 @@ public:
 	UdpPacket(const uint8_t* data, size_t dataLen);
 	UdpPacket(const uint8_t* data, size_t dataLen, size_t totalPackets, size_t packetSequence);
 	~UdpPacket();
-	std::string hexString();
+	std::string* getHexString();
 	uint8_t* getData();
 	uint16_t getDataLength();
 
 private:
 	void fillRawDataVectorFromPointer(std::vector<uint8_t>* data, const uint8_t* inputData, size_t dataLen);
+	std::string* bytesToString(uint8_t* bytes, int size);
 	std::vector<uint8_t> *rawData;
 	uint8_t numPackets;
 	uint8_t packetNum;
 	uint8_t udpSequenceHeader;
+	std::string* hexString;
 
 };
 

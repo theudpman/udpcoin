@@ -23,7 +23,7 @@
 #include <System/Ipv4Resolver.h>
 #include <System/TcpListener.h>
 #include <System/TcpConnector.h>
- 
+#include "../Platform/Linux/System/MutexGuardedUdpPacketList.h"
 #include "version.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -32,6 +32,7 @@
 
 #include "ConnectionContext.h"
 #include "LevinProtocol.h"
+#include "LevinConstants.h"
 #include "P2pProtocolDefinitions.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
 
@@ -466,6 +467,7 @@ namespace CryptoNote
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
     m_transaction_listener = System::UdpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
+    udpPacketList = System::MutexGuardedUdpPacketList(m_dispatcher);
 
     logger(INFO, BRIGHT_GREEN) << "Net service binded on " << m_bind_ip << ":" << m_listeningPort;
 
@@ -491,8 +493,11 @@ namespace CryptoNote
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::timedSyncLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::timeoutLoop, this));
+    logger(INFO) << "Starting UDP subsystem";
     m_workingContextGroup.spawn(std::bind(&NodeServer::receiveUdpTransactions, this));
+    //m_workingContextGroup.spawn(std::bind(&NodeServer::processUdpPackets, this));
 
+    logger(INFO) << "Running node";
     m_stopEvent.wait();
 
     logger(INFO) << "Stopping NodeServer and it's" << m_connections.size() << " connections...";
@@ -1303,14 +1308,43 @@ namespace CryptoNote
 	  m_transaction_listener.closeSocket();
   }
 
+void NodeServer::processUdpPackets() {
+	while (!m_stop) {
+		try {
+			System::UdpPacket* udpPacket = udpPacketList.removeFirstElement();
+
+			if (udpPacket == nullptr) {
+				continue;
+			}
+
+			logger(DEBUGGING) << "processed UDP packet";
+			delete udpPacket;
+		} catch (System::InterruptedException&) {
+		  logger(DEBUGGING) << "processUdpPackets() is interrupted";
+		  break;
+		} catch (const std::exception& e) {
+		  logger(WARNING) << "Exception in processUdpPackets: " << e.what();
+		}
+	  }
+
+	  logger(DEBUGGING) << "processUdpPackets finished";
+	}
+
   void NodeServer::receiveUdpTransactions() {
-    for (;;) {
+	while (!m_stop) {
       try {
     	  System::UdpPacket* udpPacket = m_transaction_listener.receiveUdpPacket();
 
-    	  if (udpPacket) {
-    		  delete udpPacket;
+    	  if (udpPacket == nullptr) {
+    		  continue;
     	  }
+
+    	  logger(DEBUGGING) << "got UDP packet";
+    	  bucket_head2* head = (bucket_head2*)udpPacket->getData();
+    	  logger(DEBUGGING) << std::hex << head->m_signature << std::endl;
+    	  logger(DEBUGGING) << std::hex << head->m_cb << std::endl;
+    	  logger(DEBUGGING) << std::hex << head->m_command << std::endl;
+    	  logger(DEBUGGING) << std::hex << head->m_protocol_version << std::endl;
       } catch (System::InterruptedException&) {
         logger(DEBUGGING) << "receiveUdpTransactions() is interrupted";
         break;
@@ -1445,7 +1479,8 @@ namespace CryptoNote
     logger(DEBUGGING) << ctx << "writeHandler started";
 
     try {
-      LevinProtocol proto(ctx.connection, m_port);
+      LevinProtocol proto(ctx.connection);
+      LevinUdpProtocol udpProto(ctx.connection);
 
       for (;;) {
         auto msgs = ctx.popBuffer();
@@ -1455,16 +1490,16 @@ namespace CryptoNote
 
         for (const auto& msg : msgs) {
           logger(DEBUGGING) << ctx << "msg " << msg.type << ':' << msg.command;
-          proto.sendUdpMessage(msg.command, msg.buffer);
 
           if (msg.type == P2pMessage::COMMAND) {
         	  proto.sendMessage(msg.command, msg.buffer, true);
           } else if (msg.type == P2pMessage::NOTIFY) {
-        	  if (msg.command == NOTIFY_NEW_TRANSACTIONS_COMMAND) {
-
+        	  if (msg.command == NOTIFY_NEW_TRANSACTIONS_COMMAND
+        			  && msg.buffer.size() < MAX_SAFE_UDP_DATA_SIZE) {
+        		  udpProto.sendUdpMessage(msg.command, msg.buffer, m_port);
+        	  } else {
+        		  proto.sendMessage(msg.command, msg.buffer, false);
         	  }
-
-        	  proto.sendMessage(msg.command, msg.buffer, false);
           } else if (msg.type == P2pMessage::REPLY) {
         	  proto.sendReply(msg.command, msg.buffer, msg.returnCode);
           } else {

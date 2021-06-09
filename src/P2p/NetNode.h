@@ -17,7 +17,7 @@
 #include <System/TcpConnection.h>
 #include <System/TcpListener.h>
 #include <System/UdpListener.h>
-
+#include "../Platform/Linux/System/MutexGuardedUdpPacketList.h"
 #include "CryptoNoteCore/OnceInInterval.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "Common/CommandLine.h"
@@ -25,6 +25,7 @@
 
 #include "ConnectionContext.h"
 #include "LevinProtocol.h"
+#include "LevinUdpProtocol.h"
 #include "NetNodeCommon.h"
 #include "NetNodeConfig.h"
 #include "P2pProtocolDefinitions.h"
@@ -202,6 +203,7 @@ namespace CryptoNote
 
     void acceptLoop();
     void receiveUdpTransactions();
+    void processUdpPackets();
     void shutdownUdp();
     void connectionHandler(const boost::uuids::uuid& connectionId, P2pConnectionContext& connection);
     void writeHandler(P2pConnectionContext& ctx);
@@ -241,6 +243,7 @@ namespace CryptoNote
     System::UdpListener m_transaction_listener;
     Logging::LoggerRef logger;
     std::atomic<bool> m_stop;
+    System::MutexGuardedUdpPacketList udpPacketList;
 
     CryptoNoteProtocolHandler& m_payload_handler;
     PeerlistManager m_peerlist;

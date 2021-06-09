@@ -31,7 +31,6 @@ const int32_t LEVIN_PROTOCOL_RETCODE_SUCCESS = 1;
 
 class LevinProtocol {
 public:
-
   LevinProtocol(System::TcpConnection& connection);
   LevinProtocol(System::TcpConnection& connection, std::string udpPort);
 
@@ -66,7 +65,6 @@ public:
   bool readCommand(Command& cmd);
 
   void sendMessage(uint32_t command, const BinaryArray& out, bool needResponse);
-  void sendUdpMessage(uint32_t command, const BinaryArray& out);
   void sendReply(uint32_t command, const BinaryArray& out, int32_t returnCode);
 
   template <typename T>
@@ -97,7 +95,6 @@ private:
   bool readStrict(uint8_t* ptr, size_t size);
   void writeStrict(const uint8_t* ptr, size_t size);
   System::TcpConnection& m_conn;
-  uint16_t udpPort;
 };
 
 }

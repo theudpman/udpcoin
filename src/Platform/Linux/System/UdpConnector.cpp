@@ -24,6 +24,8 @@
 #include "TcpConnection.h"
 
 
+
+
 #define			MAX_UDP_PACKETS_TO_SEND						3
 
 
@@ -44,8 +46,7 @@ namespace System {
 		int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 		if (fd < 0) {
-			// log here
-			return;
+			throw std::runtime_error("Failed to open socket for sending UDP packets");
 		}
 
 		if (size < MAX_SAFE_UDP_DATA_SIZE) {
@@ -54,7 +55,7 @@ namespace System {
 			int closeSocketRetCode = close(fd);
 
 			if (closeSocketRetCode < 0) {
-				// log here
+				throw std::runtime_error("Failed to close socket for sending UDP packets");
 			}
 
 			return;
@@ -63,7 +64,7 @@ namespace System {
 		splitAndSendUdpPackets(fd, ptr, size);
 		int closeSocketRetCode = close(fd);
 		if (closeSocketRetCode < 0) {
-			// log here
+			throw std::runtime_error("Failed to close socket for sending UDP packets");
 		}
 
 		return;
@@ -95,7 +96,7 @@ namespace System {
 	void UdpConnector::sendPacketMultipleAttempts(int socket, UdpPacket* packet) {
 		for (int i = 0; i < MAX_UDP_PACKETS_TO_SEND; ++i) {
 			if (sendUdpSequencePacket(socket, packet) < 0) {
-				// log here
+				throw std::runtime_error("Failed to send UDP packet " + (i + 1));
 			}
 		}
 	}

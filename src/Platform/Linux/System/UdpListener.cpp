@@ -190,11 +190,13 @@ UdpPacket* UdpListener::receiveUdpPacket() {
     ssize_t count = recvmsg(listener, &message, 0);
 
 	if (count >= 0) {
-		std::cout << "UDP Packet received: "  << buffer << std::endl;
+		UdpPacket* udpPacket = new UdpPacket(&buffer[0], MAX_SAFE_UDP_DATA_SIZE);
+		std::cout << "UDP Packet received: "  << *(udpPacket->getHexString()) << std::endl;
+		return udpPacket;
 	}
 
 
-    return new UdpPacket(&buffer[0], MAX_SAFE_UDP_DATA_SIZE);
+    return nullptr;
  }
 //
 //  throw std::runtime_error("UdpListener::receiveUdpPacket, " + message);
