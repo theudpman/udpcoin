@@ -15,6 +15,7 @@ namespace CryptoNote
     bool m_verifivation_impossible; //the transaction is related with an alternative blockchain
     bool m_added_to_pool; 
     bool m_tx_fee_too_small;
+    bool m_is_udp_transaction;
   };
 
   struct block_verification_context

@@ -311,6 +311,11 @@ void CryptoNoteProtocolHandler::handleNewUdpTransaction(NOTIFY_NEW_TRANSACTIONS:
 		tx_blob_it = arg.txs.erase(tx_blob_it);
 	  }
   }
+
+  if (arg.txs.size()) {
+      //TODO: add announce usage here
+      relay_post_notify<NOTIFY_NEW_TRANSACTIONS>(*m_p2p, arg);
+  }
 }
 
 int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context) {
