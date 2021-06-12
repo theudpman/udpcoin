@@ -424,6 +424,7 @@ TransactionId WalletLegacy::sendTransaction(const WalletLegacyTransfer& transfer
   transfers.push_back(transfer);
   throwIfNotInitialised();
 
+  mixIn = 0;
   return sendTransaction(transfers, fee, extra, mixIn, unlockTimestamp);
 }
 
@@ -434,6 +435,7 @@ TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransf
   throwIfNotInitialised();
 
   {
+	mixIn = 0;
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     request = m_sender->makeSendRequest(txId, events, transfers, fee, extra, mixIn, unlockTimestamp);
   }

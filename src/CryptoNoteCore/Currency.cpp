@@ -422,6 +422,7 @@ size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t 
   const size_t TRANSACTION_VERSION_SIZE = sizeof(uint8_t);
   const size_t TRANSACTION_UNLOCK_TIME_SIZE = sizeof(uint64_t);
 
+  mixinCount = 0;
   const size_t outputsSize = outputCount * (OUTPUT_TAG_SIZE + OUTPUT_KEY_SIZE + AMOUNT_SIZE);
   const size_t headerSize = TRANSACTION_VERSION_SIZE + TRANSACTION_UNLOCK_TIME_SIZE + EXTRA_TAG_SIZE + PUBLIC_KEY_SIZE;
   const size_t inputSize = INPUT_TAG_SIZE + AMOUNT_SIZE + KEY_IMAGE_SIZE + SIGNATURE_SIZE + GLOBAL_INDEXES_VECTOR_SIZE_SIZE + GLOBAL_INDEXES_INITIAL_VALUE_SIZE +

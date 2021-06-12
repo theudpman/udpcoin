@@ -828,7 +828,7 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
     sendParams.fee = request.fee;
-    sendParams.mixIn = request.anonymity;
+    sendParams.mixIn = 0;
     sendParams.unlockTimestamp = request.unlockTime;
     sendParams.changeDestination = request.changeAddress;
 
@@ -867,7 +867,7 @@ std::error_code WalletService::createDelayedTransaction(const CreateDelayedTrans
     sendParams.sourceAddresses = request.addresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
     sendParams.fee = request.fee;
-    sendParams.mixIn = request.anonymity;
+    sendParams.mixIn = 0;
     sendParams.unlockTimestamp = request.unlockTime;
     sendParams.changeDestination = request.changeAddress;
 

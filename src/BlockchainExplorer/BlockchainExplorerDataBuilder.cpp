@@ -226,11 +226,7 @@ bool BlockchainExplorerDataBuilder::fillTransactionDetails(const Transaction& tr
       return false;
     }
     transactionDetails.fee = fee;
-    uint64_t mixin;
-    if (!getMixin(transaction, mixin)) {
-      return false;
-    }
-    transactionDetails.mixin = mixin;
+    transactionDetails.mixin = 0;
   }
 
   Crypto::Hash paymentId;

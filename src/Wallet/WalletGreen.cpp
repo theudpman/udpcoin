@@ -732,9 +732,7 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets,
   typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
   std::vector<outs_for_amount> mixinResult;
 
-  if (mixIn != 0) {
-    requestMixinOuts(selectedTransfers, mixIn, mixinResult);
-  }
+  mixIn = 0;
 
   std::vector<InputInfo> keysInfo;
   prepareInputs(selectedTransfers, mixinResult, mixIn, keysInfo);
@@ -1352,6 +1350,7 @@ void WalletGreen::requestMixinOuts(
     amounts.push_back(out.out.amount);
   }
 
+  mixIn = 0;
   System::Event requestFinished(m_dispatcher);
   std::error_code mixinError;
 
@@ -1509,6 +1508,7 @@ void WalletGreen::prepareInputs(
 
   typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry out_entry;
 
+  mixIn = 0;
   size_t i = 0;
   for (const auto& input: selectedTransfers) {
     TransactionTypes::InputKeyInfo keyInfo;
@@ -2079,9 +2079,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin) 
 
   typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
   std::vector<outs_for_amount> mixinResult;
-  if (mixin != 0) {
-    requestMixinOuts(fusionInputs, mixin, mixinResult);
-  }
+  mixin = 0;
 
   std::vector<InputInfo> keysInfo;
   prepareInputs(fusionInputs, mixinResult, mixin, keysInfo);
