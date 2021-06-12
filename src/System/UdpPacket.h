@@ -8,7 +8,7 @@
 #include <vector>
 
 
-#define		MAX_SAFE_UDP_DATA_SIZE				507
+#define		MAX_SAFE_UDP_DATA_SIZE				1014
 #define		UDP_SEQUENCE_HEADER					1
 
 #define		IP_HEADER_SIZE						60

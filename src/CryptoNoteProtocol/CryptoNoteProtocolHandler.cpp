@@ -296,6 +296,23 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
   return true;
 }
 
+void CryptoNoteProtocolHandler::handleNewUdpTransaction(NOTIFY_NEW_TRANSACTIONS::request& arg) {
+  logger(Logging::TRACE) << "NOTIFY_NEW_TRANSACTIONS";
+  for (auto tx_blob_it = arg.txs.begin(); tx_blob_it != arg.txs.end();) {
+	  CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+	  m_core.handle_incoming_tx(asBinaryArray(*tx_blob_it), tvc, false);
+	  if (tvc.m_verifivation_failed) {
+		logger(Logging::INFO) << "Tx verification failed";
+	  }
+
+	  if (!tvc.m_verifivation_failed && tvc.m_should_be_relayed) {
+		++tx_blob_it;
+	  } else {
+		tx_blob_it = arg.txs.erase(tx_blob_it);
+	  }
+  }
+}
+
 int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context) {
   logger(Logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
   NOTIFY_RESPONSE_GET_OBJECTS::request rsp;

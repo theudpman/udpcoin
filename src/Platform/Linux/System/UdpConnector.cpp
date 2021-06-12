@@ -26,7 +26,7 @@
 
 
 
-#define			MAX_UDP_PACKETS_TO_SEND						3
+#define			MAX_UDP_PACKETS_TO_SEND						1
 
 
 inline uint32_t hostToNetwork(uint32_t n) {

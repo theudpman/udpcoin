@@ -5,7 +5,9 @@
 #include "NetNode.h"
 
 #include <algorithm>
+#include <iterator>
 #include <fstream>
+#include <vector>
 
 #include <boost/foreach.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -33,6 +35,7 @@
 #include "ConnectionContext.h"
 #include "LevinProtocol.h"
 #include "LevinConstants.h"
+#include "Common/StringTools.h"
 #include "P2pProtocolDefinitions.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
 
@@ -1340,11 +1343,40 @@ void NodeServer::processUdpPackets() {
     	  }
 
     	  logger(DEBUGGING) << "got UDP packet";
-    	  bucket_head2* head = (bucket_head2*)udpPacket->getData();
+    	  bucket_head2* head = (bucket_head2*)(udpPacket->getData() + 1);
     	  logger(DEBUGGING) << std::hex << head->m_signature << std::endl;
     	  logger(DEBUGGING) << std::hex << head->m_cb << std::endl;
     	  logger(DEBUGGING) << std::hex << head->m_command << std::endl;
     	  logger(DEBUGGING) << std::hex << head->m_protocol_version << std::endl;
+
+    	  uint8_t* dataPtr = udpPacket->getData();
+//    	  std::vector<uint8_t>* dataStream = new std::vector<uint8_t>(dataPtr + 1 + sizeof(bucket_head2), dataPtr + 1 + sizeof(bucket_head2) + head->m_cb);
+//
+//
+//    	  char const hexIndexToChar[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B','C','D','E','F'};
+//
+//    	  std::cout << "Translated packet: " << std::endl;
+//    	  for (uint8_t i : *dataStream) {
+//    		  std::string str;
+//    		  str.append(&hexIndexToChar[(i  & 0xF0) >> 4], 1);
+//    		  str.append(&hexIndexToChar[i & 0xF], 1);
+//    		  std::cout << " " << str;
+//    	  }
+//
+//    	  std::cout << "Translated packet end " << std::endl;
+
+
+    	  std::string myString((char*)(dataPtr + 1 + sizeof(bucket_head2)), head->m_cb);
+    	  typedef typename NOTIFY_NEW_TRANSACTIONS::request Request;
+    	  Request req = boost::value_initialized<Request>();
+    	  std::vector<uint8_t> binArr = asBinaryArray(myString);
+
+		  if (!LevinProtocol::decode(binArr, req)) {
+			  std::cout << "Failed to decode UDP Packet" << std::endl;
+		  }
+
+    	  m_payload_handler.handleNewUdpTransaction(req);
+    	  delete udpPacket;
       } catch (System::InterruptedException&) {
         logger(DEBUGGING) << "receiveUdpTransactions() is interrupted";
         break;

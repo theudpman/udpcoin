@@ -130,6 +130,11 @@ UdpPacket* UdpListener::receiveUdpPacket() {
   if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
     message = "epoll_ctl failed, " + lastErrorMessage();
   } else {
+	  int flags = fcntl(listener, F_GETFL, 0);
+	       if (flags == -1 || fcntl(listener, F_SETFL, flags | O_NONBLOCK) == -1) {
+	         message = "fcntl failed, " + lastErrorMessage();
+	       }
+
     context = &listenerContext;
     dispatcher->getCurrentContext()->interruptProcedure = [&]() {
         assert(dispatcher != nullptr);
@@ -174,6 +179,7 @@ UdpPacket* UdpListener::receiveUdpPacket() {
     socklen_t inLen = sizeof(inAddr);
     uint8_t buffer[MAX_SAFE_UDP_DATA_SIZE];
     struct sockaddr_storage src_addr;
+    bzero(buffer, MAX_SAFE_UDP_DATA_SIZE);
 
     struct iovec iov[1];
     iov[0].iov_base = buffer;
