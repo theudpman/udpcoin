@@ -111,6 +111,7 @@ void RpcServer::processRequest(const HttpRequest& request, HttpResponse& respons
     return;
   }
 
+  response.addHeader("Access-Control-Allow-Origin", "true");
   it->second.handler(this, request, response);
 }
 
@@ -322,6 +323,9 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
   res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocolQuery.getObservedHeight()) - 1;
   res.status = CORE_RPC_STATUS_OK;
+  uint64_t generatedCoins;
+  m_core.getCirculatingSupply(generatedCoins);
+  res.already_generated_coins = generatedCoins;
   return true;
 }
 
