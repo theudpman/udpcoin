@@ -266,6 +266,7 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t grey_peerlist_size;
     uint32_t last_known_block_index;
     uint64_t already_generated_coins;
+    uint64_t next_reward;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(status)
@@ -280,6 +281,7 @@ struct COMMAND_RPC_GET_INFO {
       KV_MEMBER(grey_peerlist_size)
       KV_MEMBER(last_known_block_index)
 	  KV_MEMBER(already_generated_coins)
+	  KV_MEMBER(next_reward)
     }
   };
 };
