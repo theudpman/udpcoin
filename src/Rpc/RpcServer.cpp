@@ -137,7 +137,8 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
       { "submitblock", { makeMemberMethod(&RpcServer::on_submitblock), false } },
       { "getlastblockheader", { makeMemberMethod(&RpcServer::on_get_last_block_header), true } },
       { "getblockheaderbyhash", { makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false } },
-      { "getblockheaderbyheight", { makeMemberMethod(&RpcServer::on_get_block_header_by_height), false } }
+      { "getblockheaderbyheight", { makeMemberMethod(&RpcServer::on_get_block_header_by_height), false } },
+	  { "getblocks", { makeMemberMethod(&RpcServer::on_get_blocks_for_api_explorer), false } },
     };
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -188,6 +189,40 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
 
   res.current_height = totalBlockCount;
   res.start_height = startBlockIndex;
+
+  for (const auto& blockId : supplement) {
+    assert(m_core.have_block(blockId));
+    auto completeBlock = m_core.getBlock(blockId);
+    assert(completeBlock != nullptr);
+
+    res.blocks.resize(res.blocks.size() + 1);
+    res.blocks.back().block = asString(toBinaryArray(completeBlock->getBlock()));
+
+    res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
+    for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
+      res.blocks.back().txs.push_back(asString(toBinaryArray(completeBlock->getTransaction(i))));
+    }
+  }
+
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::request& req, COMMAND_RPC_GET_BLOCKS::response& res) {
+  // TODO code duplication see InProcessNode::doGetNewBlocks()
+  if (req.start_height < 0) {
+    res.status = "Failed";
+    return false;
+  }
+
+  if (req.end_height < 0 || req.end_height < req.start_height) {
+    res.status = "Failed";
+    return false;
+  }
+
+  uint32_t totalBlockCount = req.end_height - req.start_height;
+  uint32_t startBlockIndex = req.start_height;
+  std::vector<Crypto::Hash> supplement = m_core.findBlockchainRange(totalBlockCount, startBlockIndex);
 
   for (const auto& blockId : supplement) {
     assert(m_core.have_block(blockId));

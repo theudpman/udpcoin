@@ -66,6 +66,29 @@ struct COMMAND_RPC_GET_BLOCKS_FAST {
     }
   };
 };
+
+struct COMMAND_RPC_GET_BLOCKS {
+
+  struct request {
+	uint64_t start_height;
+	uint64_t end_height;
+
+    void serialize(ISerializer &s) {
+    	KV_MEMBER(start_height)
+    	KV_MEMBER(end_height)
+    }
+  };
+
+  struct response {
+    std::vector<block_complete_entry> blocks;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(blocks)
+      KV_MEMBER(status)
+    }
+  };
+};
 //-----------------------------------------------
 struct COMMAND_RPC_GET_TRANSACTIONS {
   struct request {

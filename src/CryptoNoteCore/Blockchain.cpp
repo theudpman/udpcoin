@@ -1293,6 +1293,12 @@ void Blockchain::print_blockchain_outs(const std::string& file) {
   }
 }
 
+std::vector<Crypto::Hash> Blockchain::findBlockchainRange(uint32_t& totalBlockCount, uint32_t& startBlockIndex) {
+  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+
+  return m_blockIndex.getBlockIds(startBlockIndex, static_cast<uint32_t>(totalBlockCount));
+}
+
 std::vector<Crypto::Hash> Blockchain::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount,
   uint32_t& totalBlockCount, uint32_t& startBlockIndex) {
 

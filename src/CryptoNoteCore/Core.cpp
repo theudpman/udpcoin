@@ -389,6 +389,10 @@ std::vector<Crypto::Hash> core::findBlockchainSupplement(const std::vector<Crypt
   return m_blockchain.findBlockchainSupplement(remoteBlockIds, maxCount, totalBlockCount, startBlockIndex);
 }
 
+std::vector<Crypto::Hash> core::findBlockchainRange(uint32_t& totalBlockCount, uint32_t& startBlockIndex) {
+	return m_blockchain.findBlockchainRange(totalBlockCount, startBlockIndex);
+}
+
 void core::print_blockchain(uint32_t start_index, uint32_t end_index) {
   m_blockchain.print_blockchain(start_index, end_index);
 }
