@@ -230,7 +230,9 @@ bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::req
     assert(completeBlock != nullptr);
 
     res.blocks.resize(res.blocks.size() + 1);
-    res.blocks.back().block = asString(toBinaryArray(completeBlock->getBlock()));
+
+    res.blocks.back().block_id = get_block_hash(completeBlock->getBlock());
+
 
     res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
     for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
