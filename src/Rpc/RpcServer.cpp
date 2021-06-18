@@ -210,18 +210,18 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
 
 bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::request& req, COMMAND_RPC_GET_BLOCKS::response& res) {
   // TODO code duplication see InProcessNode::doGetNewBlocks()
-  if (req.start_height < 0) {
+  if (req.height < 0) {
     res.status = "Failed";
     return false;
   }
 
-  if (req.end_height < 0 || req.end_height < req.start_height) {
+  if (req.count < 0) {
     res.status = "Failed";
     return false;
   }
 
-  uint32_t totalBlockCount = req.end_height - req.start_height;
-  uint32_t startBlockIndex = req.start_height;
+  uint32_t totalBlockCount = req.count;
+  uint32_t startBlockIndex = (req.height - req.count) < 0 ? 0 : (req.height - req.count);
   std::vector<Crypto::Hash> supplement = m_core.findBlockchainRange(totalBlockCount, startBlockIndex);
 
   for (const auto& blockId : supplement) {
@@ -230,9 +230,7 @@ bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::req
     assert(completeBlock != nullptr);
 
     res.blocks.resize(res.blocks.size() + 1);
-
-    res.blocks.back().block = storeToJson(completeBlock);
-
+    res.blocks.back().block = storeToJson(completeBlock->getBlock());
 
     res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
     for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
