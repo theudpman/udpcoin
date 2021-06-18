@@ -231,12 +231,12 @@ bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::req
 
     res.blocks.resize(res.blocks.size() + 1);
 
-    res.blocks.back().block_id = get_block_hash(completeBlock->getBlock());
+    res.blocks.back().block = storeToJson(completeBlock);
 
 
     res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
     for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
-      res.blocks.back().txs.push_back(asString(toBinaryArray(completeBlock->getTransaction(i))));
+      res.blocks.back().txs.push_back(storeToJson(completeBlock->getTransaction(i)));
     }
   }
 
