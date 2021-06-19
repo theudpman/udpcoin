@@ -626,7 +626,14 @@ std::ostream& operator<<(std::ostream& out, const JsonValue& jsonValue) {
     break;
   }
   case JsonValue::STRING:
-    out << '"' << *reinterpret_cast<const JsonValue::String*>(jsonValue.valueString) << '"';
+    auto castedString = *reinterpret_cast<const JsonValue::String*>(jsonValue.valueString);
+	  
+    if (castedString.front() == ((uint8_t)'{')) {
+      out << castedString;
+      break;
+    }
+
+    out << '"' << castedString << '"';
     break;
   }
 

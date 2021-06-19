@@ -231,8 +231,7 @@ bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::req
 
     res.blocks.resize(res.blocks.size() + 1);
     std::string jsonString = storeToJson(completeBlock->getBlock());
-    jsonString.append("'", 0, 1);
-    jsonString.append("'", jsonString.length(), 1);
+//    std::string escapeJsonString = "'" + jsonString + "'";
     res.blocks.back().block = jsonString;
 
     res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
