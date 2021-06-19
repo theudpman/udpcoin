@@ -34,6 +34,26 @@ namespace CryptoNote
 
   };
 
+  struct block_complete_entry_extended : public block_complete_entry
+	{
+	  std::string block;
+	  uint32_t blockHeight;
+		Crypto::Hash blockHash;
+		uint64_t blockSize;
+		uint64_t blockDifficulty;
+	  std::vector<std::string> txs;
+
+	  void serialize(ISerializer& s) {
+	  KV_MEMBER(blockHash)
+		KV_MEMBER(blockHeight)
+		KV_MEMBER(blockSize)
+		KV_MEMBER(blockDifficulty)
+		KV_MEMBER(block);
+		KV_MEMBER(txs);
+	  }
+
+	};
+
   struct BlockFullInfo : public block_complete_entry
   {
     Crypto::Hash block_id;

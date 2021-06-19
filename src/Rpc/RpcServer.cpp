@@ -231,8 +231,20 @@ bool RpcServer::on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::req
 
     res.blocks.resize(res.blocks.size() + 1);
     std::string jsonString = storeToJson(completeBlock->getBlock());
-//    std::string escapeJsonString = "'" + jsonString + "'";
     res.blocks.back().block = jsonString;
+    res.blocks.back().blockHash = blockId;
+
+    uint32_t blockHeight;
+    m_core.getBlockHeight(blockId, blockHeight);
+    res.blocks.back().blockHeight = blockHeight;
+
+    difficulty_type difficulty;
+    m_core.getBlockDifficulty(blockHeight, difficulty);
+		res.blocks.back().blockDifficulty = difficulty;
+
+		size_t blockSize;
+    m_core.getBlockSize(blockId, blockSize);
+    res.blocks.back().blockSize = (uint64_t) blockSize;
 
     res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
     for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {

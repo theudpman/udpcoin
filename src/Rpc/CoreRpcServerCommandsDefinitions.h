@@ -80,7 +80,7 @@ struct COMMAND_RPC_GET_BLOCKS {
   };
 
   struct response {
-    std::vector<block_complete_entry> blocks;
+    std::vector<block_complete_entry_extended> blocks;
     std::string status;
 
     void serialize(ISerializer &s) {
