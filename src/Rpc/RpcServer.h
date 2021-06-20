@@ -40,6 +40,8 @@ private:
   // binary handlers
   bool on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, COMMAND_RPC_GET_BLOCKS_FAST::response& res);
   bool on_get_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::request& req, COMMAND_RPC_GET_BLOCKS::response& res);
+  bool on_get_transactions_for_api_explorer(const COMMAND_RPC_MEMPOOL_TRANSACTIONS::request& req, COMMAND_RPC_MEMPOOL_TRANSACTIONS::response& res);
+  bool on_get_alt_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::request& req, COMMAND_RPC_GET_BLOCKS::response& res);
   bool on_query_blocks(const COMMAND_RPC_QUERY_BLOCKS::request& req, COMMAND_RPC_QUERY_BLOCKS::response& res);
   bool on_query_blocks_lite(const COMMAND_RPC_QUERY_BLOCKS_LITE::request& req, COMMAND_RPC_QUERY_BLOCKS_LITE::response& res);
   bool on_get_indexes(const COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request& req, COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response& res);

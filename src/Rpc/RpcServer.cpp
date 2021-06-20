@@ -139,6 +139,8 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
       { "getblockheaderbyhash", { makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false } },
       { "getblockheaderbyheight", { makeMemberMethod(&RpcServer::on_get_block_header_by_height), false } },
 	  { "getblocks", { makeMemberMethod(&RpcServer::on_get_blocks_for_api_explorer), false } },
+		{ "getaltblocks", { makeMemberMethod(&RpcServer::on_get_alt_blocks_for_api_explorer), false } },
+		{ "gettransactions", { makeMemberMethod(&RpcServer::on_get_transactions_for_api_explorer), false } },
     };
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -203,6 +205,81 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
       res.blocks.back().txs.push_back(asString(toBinaryArray(completeBlock->getTransaction(i))));
     }
   }
+
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_get_alt_blocks_for_api_explorer(const COMMAND_RPC_GET_BLOCKS::request& req, COMMAND_RPC_GET_BLOCKS::response& res) {
+  // TODO code duplication see InProcessNode::doGetNewBlocks()
+  if (req.height < 0) {
+    res.status = "Failed";
+    return false;
+  }
+
+  if (req.count < 0) {
+    res.status = "Failed";
+    return false;
+  }
+
+  uint32_t totalBlockCount = req.count;
+  uint32_t startBlockIndex = (req.height - req.count) < 0 ? 0 : (req.height - req.count);
+  std::list<Block> blocks;
+  m_core.get_alternative_blocks(blocks);
+
+  for (const auto& completeBlock : blocks) {
+    res.blocks.resize(res.blocks.size() + 1);
+    std::string jsonString = storeToJson(completeBlock);
+    res.blocks.back().block = jsonString;
+
+    auto blockHash = get_block_hash(completeBlock);
+    res.blocks.back().blockHash = blockHash;
+
+    uint32_t blockHeight;
+    m_core.getBlockHeight(blockHash, blockHeight);
+    res.blocks.back().blockHeight = blockHeight;
+
+    difficulty_type difficulty;
+    m_core.getBlockDifficulty(blockHeight, difficulty);
+		res.blocks.back().blockDifficulty = difficulty;
+
+		size_t blockSize;
+    m_core.getBlockSize(blockHash, blockSize);
+    res.blocks.back().blockSize = (uint64_t) blockSize;
+
+    /*
+    res.blocks.back().txs.reserve(completeBlock.getTransactionCount());
+    for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
+      res.blocks.back().txs.push_back(storeToJson(completeBlock->getTransaction(i)));
+    }
+    */
+  }
+
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_get_transactions_for_api_explorer(const COMMAND_RPC_MEMPOOL_TRANSACTIONS::request& req, COMMAND_RPC_MEMPOOL_TRANSACTIONS::response& res) {
+	std::vector<Transaction> poolTxs = m_core.getPoolTransactions();
+
+	for (Transaction tx : poolTxs) {
+		res.transactions.resize(res.transactions.size() + 1);
+		uint64_t amountOut = 0;
+
+		for (TransactionOutput txOut : tx.outputs) {
+			amountOut += txOut.amount;
+		}
+
+		res.transactions.back().amount_out = amountOut;
+		//res.transactions.back().fee = amountIn - amountOut;
+		res.transactions.back().receive_time = tx.unlockTime;
+
+		Hash txHash;
+		size_t blobSize = 0;
+		getObjectHash(tx, txHash, blobSize);
+		res.transactions.back().size = blobSize;
+		res.transactions.back().hash = txHash;
+	}
 
   res.status = CORE_RPC_STATUS_OK;
   return true;

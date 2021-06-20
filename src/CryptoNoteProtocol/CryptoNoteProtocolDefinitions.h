@@ -22,6 +22,24 @@ namespace CryptoNote
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
+  struct mempool_transactions
+	{
+  	uint64_t receive_time;
+  	uint64_t amount_out;
+  	uint64_t fee;
+  	uint32_t size;
+  	Crypto::Hash hash;
+
+  	void serialize(ISerializer& s) {
+      KV_MEMBER(receive_time)
+      KV_MEMBER(amount_out)
+			KV_MEMBER(fee)
+			KV_MEMBER(size)
+			KV_MEMBER(hash)
+    }
+	};
+
+
   struct block_complete_entry
   {
     std::string block;

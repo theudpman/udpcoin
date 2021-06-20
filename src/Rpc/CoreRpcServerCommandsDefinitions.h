@@ -67,6 +67,24 @@ struct COMMAND_RPC_GET_BLOCKS_FAST {
   };
 };
 
+struct COMMAND_RPC_MEMPOOL_TRANSACTIONS {
+
+  struct request {
+  	void serialize(ISerializer &s) {
+  	}
+  };
+
+  struct response {
+    std::vector<mempool_transactions> transactions;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transactions)
+      KV_MEMBER(status)
+    }
+  };
+};
+
 struct COMMAND_RPC_GET_BLOCKS {
 
   struct request {
