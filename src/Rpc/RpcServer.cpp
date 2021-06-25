@@ -454,14 +454,31 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   m_core.getCirculatingSupply(generatedCoins);
   res.already_generated_coins = generatedCoins;
 
-//  Hash latestBlockHash = m_core.getBlockIdByHeight(res.height);
-//  Block latestBlock;
-//  m_core.getBlockByHash(latestBlockHash, latestBlock);
-//  m_core.
-//
-//  m_core.getBlockReward(, currentBlockSize, alreadyGeneratedCoins, fee, reward, emissionChange)
+  uint64_t maxReward = 0;
+	int64_t emissionChange = 0;
+	std::vector<size_t> blocksSizes;
+	m_core.getBackwardBlocksSizes(res.height, blocksSizes, parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
+	uint64_t sizeMedian = median(blocksSizes);
+	m_core.getBlockReward(sizeMedian, 0, generatedCoins, 0, maxReward, emissionChange);
 
   return true;
+}
+
+size_t RpcServer::median(std::vector<size_t>& v) {
+  if (v.empty())
+    return boost::value_initialized<size_t>();
+  if (v.size() == 1)
+    return v[0];
+
+  size_t n = (v.size()) / 2;
+  std::sort(v.begin(), v.end());
+  //nth_element(v.begin(), v.begin()+n-1, v.end());
+  if (v.size() % 2) {//1, 3, 5...
+    return v[n];
+  } else {//2, 4, 6...
+    return (v[n - 1] + v[n]) / 2;
+  }
+
 }
 
 bool RpcServer::on_get_height(const COMMAND_RPC_GET_HEIGHT::request& req, COMMAND_RPC_GET_HEIGHT::response& res) {
