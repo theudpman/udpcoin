@@ -208,4 +208,8 @@ UdpPacket* UdpListener::receiveUdpPacket() {
 //  throw std::runtime_error("UdpListener::receiveUdpPacket, " + message);
 }
 
+bool UdpListener::isValid() {
+	return false;
+}
+
 }

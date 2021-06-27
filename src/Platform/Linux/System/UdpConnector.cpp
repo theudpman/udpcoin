@@ -42,6 +42,10 @@ namespace System {
 		udpPort = udpPortParam;
 	}
 
+	bool UdpConnector::isValid() {
+		return true;
+	}
+
 	void UdpConnector::sendUdpPackets(const uint8_t* ptr, size_t size) {
 		int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -109,6 +113,5 @@ namespace System {
 		servaddr.sin_port = htons(udpPort);
 		return sendto(socket, packet->getData(), packet->getDataLength(), 0, (sockaddr*)&servaddr, sizeof(servaddr));
 	}
-
 
 }

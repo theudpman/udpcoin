@@ -469,7 +469,11 @@ namespace CryptoNote
     m_listeningPort = Common::fromString<uint16_t>(m_port);
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
-    m_transaction_listener = System::UdpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
+
+    if (System::UdpListener::isValid()) {
+    	m_transaction_listener = System::UdpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
+    }
+
     udpPacketList = System::MutexGuardedUdpPacketList(m_dispatcher);
 
     logger(INFO, BRIGHT_GREEN) << "Net service binded on " << m_bind_ip << ":" << m_listeningPort;
@@ -497,7 +501,10 @@ namespace CryptoNote
     m_workingContextGroup.spawn(std::bind(&NodeServer::timedSyncLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::timeoutLoop, this));
     logger(INFO) << "Starting UDP subsystem";
-    m_workingContextGroup.spawn(std::bind(&NodeServer::receiveUdpTransactions, this));
+
+    if (System::UdpListener::isValid()) {
+    	m_workingContextGroup.spawn(std::bind(&NodeServer::receiveUdpTransactions, this));
+    }
     //m_workingContextGroup.spawn(std::bind(&NodeServer::processUdpPackets, this));
 
     logger(INFO) << "Running node";
@@ -1308,7 +1315,9 @@ namespace CryptoNote
   }
 
   void NodeServer::shutdownUdp() {
-	  m_transaction_listener.closeSocket();
+  	if (System::UdpListener::isValid()) {
+  		m_transaction_listener.closeSocket();
+  	}
   }
 
 void NodeServer::processUdpPackets() {
@@ -1527,7 +1536,8 @@ void NodeServer::processUdpPackets() {
         	  proto.sendMessage(msg.command, msg.buffer, true);
           } else if (msg.type == P2pMessage::NOTIFY) {
         	  if (msg.command == NOTIFY_NEW_TRANSACTIONS_COMMAND
-        			  && msg.buffer.size() < MAX_SAFE_UDP_DATA_SIZE) {
+        			  && msg.buffer.size() < MAX_SAFE_UDP_DATA_SIZE
+								&& System::UdpListener::isValid()) {
         		  udpProto.sendUdpMessage(msg.command, msg.buffer, m_port);
         	  } else {
         		  proto.sendMessage(msg.command, msg.buffer, false);
