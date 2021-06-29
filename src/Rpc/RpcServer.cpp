@@ -457,7 +457,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   uint64_t maxReward = 0;
 	int64_t emissionChange = 0;
 	std::vector<size_t> blocksSizes;
-	m_core.getBackwardBlocksSizes(res.height, blocksSizes, parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
+	m_core.getBackwardBlocksSizes((res.height - 1), blocksSizes, parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
 	uint64_t sizeMedian = median(blocksSizes);
 	m_core.getBlockReward(sizeMedian, 0, generatedCoins, 0, maxReward, emissionChange);
 
