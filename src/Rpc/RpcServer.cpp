@@ -461,6 +461,8 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
 	uint64_t sizeMedian = median(blocksSizes);
 	m_core.getBlockReward(sizeMedian, 0, generatedCoins, 0, maxReward, emissionChange);
 
+	res.next_reward = maxReward;
+	res.min_fee = CryptoNote::parameters::MINIMUM_FEE;
   return true;
 }
 

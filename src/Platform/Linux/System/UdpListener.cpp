@@ -131,9 +131,9 @@ UdpPacket* UdpListener::receiveUdpPacket() {
     message = "epoll_ctl failed, " + lastErrorMessage();
   } else {
 	  int flags = fcntl(listener, F_GETFL, 0);
-	       if (flags == -1 || fcntl(listener, F_SETFL, flags | O_NONBLOCK) == -1) {
-	         message = "fcntl failed, " + lastErrorMessage();
-	       }
+		if (flags == -1 || fcntl(listener, F_SETFL, flags | O_NONBLOCK) == -1) {
+			message = "fcntl failed, " + lastErrorMessage();
+		}
 
     context = &listenerContext;
     dispatcher->getCurrentContext()->interruptProcedure = [&]() {
